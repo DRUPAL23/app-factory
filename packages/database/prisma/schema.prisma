@@ -1,0 +1,21 @@
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "postgresql" url = env("DATABASE_URL") }
+
+enum UserRole { OWNER ADMIN EDITOR ANALYST }
+enum WebsiteStatus { ACTIVE PAUSED }
+enum ContentStatus { DRAFT REVIEW PUBLISHED ARCHIVED }
+enum OfferStatus { ACTIVE PAUSED EXPIRED }
+enum AdStatus { ACTIVE PAUSED }
+
+model User { id String @id @default(cuid()); email String @unique; name String?; role UserRole @default(OWNER); createdAt DateTime @default(now()); publisher Publisher? }
+model Publisher { id String @id @default(cuid()); userId String @unique; name String; createdAt DateTime @default(now()); user User @relation(fields:[userId],references:[id],onDelete:Cascade); websites Website[]; campaigns Campaign[] }
+model Website { id String @id @default(cuid()); publisherId String; domain String @unique; name String; status WebsiteStatus @default(ACTIVE); publisher Publisher @relation(fields:[publisherId],references:[id],onDelete:Cascade); content Content[]; placements AdPlacement[]; createdAt DateTime @default(now()) }
+model Content { id String @id @default(cuid()); websiteId String; title String; slug String @unique; body String; status ContentStatus @default(DRAFT); keywords String[]; website Website @relation(fields:[websiteId],references:[id],onDelete:Cascade); createdAt DateTime @default(now()); updatedAt DateTime @updatedAt }
+model Campaign { id String @id @default(cuid()); publisherId String; name String; status AdStatus @default(ACTIVE); publisher Publisher @relation(fields:[publisherId],references:[id],onDelete:Cascade); ads Ad[]; createdAt DateTime @default(now()) }
+model Ad { id String @id @default(cuid()); campaignId String; name String; targetUrl String; status AdStatus @default(ACTIVE); campaign Campaign @relation(fields:[campaignId],references:[id],onDelete:Cascade); placements AdPlacement[] }
+model AdPlacement { id String @id @default(cuid()); websiteId String; adId String; slot String; website Website @relation(fields:[websiteId],references:[id],onDelete:Cascade); ad Ad @relation(fields:[adId],references:[id],onDelete:Cascade); clicks Click[] }
+model AffiliateNetwork { id String @id @default(cuid()); name String @unique; accounts AffiliateAccount[]; offers Offer[] }
+model AffiliateAccount { id String @id @default(cuid()); networkId String; accountRef String; network AffiliateNetwork @relation(fields:[networkId],references:[id],onDelete:Cascade) }
+model Offer { id String @id @default(cuid()); networkId String; name String; targetUrl String; commission Decimal @db.Decimal(12,4); epc Decimal? @db.Decimal(12,4); status OfferStatus @default(ACTIVE); network AffiliateNetwork @relation(fields:[networkId],references:[id],onDelete:Cascade); referrals Referral[] }
+model Click { id String @id @default(cuid()); placementId String; sessionId String?; createdAt DateTime @default(now()); placement AdPlacement @relation(fields:[placementId],references:[id],onDelete:Cascade) }
+model Referral { id String @id @default(cuid()); offerId String; sessionId String?; converted Boolean @default(false); revenue Decimal? @db.Decimal(12,4); createdAt DateTime @default(now()); offer Offer @relation(fields:[offerId],references:[id],onDelete:Cascade) }
