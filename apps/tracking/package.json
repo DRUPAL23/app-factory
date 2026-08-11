@@ -1,0 +1,1 @@
+{"name":"@platform/tracking","private":true,"version":"0.1.0","scripts":{"dev":"tsx watch src/server.ts","build":"tsc","start":"node dist/server.js"},"dependencies":{"fastify":"^5.2.1"},"devDependencies":{"tsx":"^4.19.2","typescript":"^5.7.2"}}
